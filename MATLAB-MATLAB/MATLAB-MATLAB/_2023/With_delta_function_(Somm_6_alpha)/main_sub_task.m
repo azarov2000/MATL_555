@@ -1,0 +1,211 @@
+close all
+clc
+clear
+    global I E S zeta_V Mom 
+    global  kappa_B 
+    global zeta_e G00Int beta G02Int
+    global eta_B mu_B
+    global G00 G10 EC G12Int G01Int G11Int G10Int h G01 G11
+warning('on')
+m = 30;
+h = 1/m;
+N = 2;
+Mom = 2;
+% alf = -1e-5;
+alf = -1e-5;
+
+% Параметры стержня
+d = 20*10^-3;           %[m]
+l = 0.7;                %[m]
+ro = 7800;              %[kg/m^3]
+Elastic = 2e11;         %[Pa]
+zeta_e = 0.025;         %[-]
+zeta_V = 0.005;         %[-]
+
+J = pi*d^4/64;          %[m^4]
+C = Elastic*J;
+eps_d = d/l;            %[-]
+beta = (eps_d^2)/16;    %[-]
+% Параметры краевого условия
+m_B = 1;                %[кг]
+
+Stiff_beam = 3*Elastic*J/l^3;
+k_B = Stiff_beam*5;              %[N/m];
+mu_B = m_B/(ro*(pi*d^2/4)*l*l);
+kappa_B = k_B*l^3/C;
+%eta_B = d_B*l/(2*sqrt(ro*(pi*d^2/4)*l*C));
+eta_B = 0.0001;          %[-]
+
+
+%% Получение матриц
+[G00Int,G01Int,G02Int,G10Int,G11Int,G12Int,...
+          G00,G01,G02,G10,G11,G12]=get_matrix(m,alf);
+
+%%
+I=eye(m+1);         % единичная матрица
+E = eye(2);         % единичная матрица
+EC = zeros(m+1); EC(end,end) = 1;
+EC_1 = zeros(m+1); EC_1(end-1,end-1) = 1;
+Z=zeros(m+1);       % нулевая матрица
+S = [0 1; -1 0];    
+
+%% Исключаем первый узел
+[G00Int,G01Int,G02Int,G10Int,G11Int,G12Int,...
+          G00,G01,G02,G10,G11,G12,I,EC,EC_1,Z]=matrix_edging(G00Int,G01Int,G02Int,G10Int,G11Int,G12Int,...
+          G00,G01,G02,G10,G11,G12,I,EC,EC_1,Z);
+      
+%%
+a_ksi_0 = kron(I,(E+2*zeta_V*N*S))+kappa_B*kron(G00*EC,E);
+a_theta_0 = Mom*(h^-1)*kron(G00*EC,E)-Mom*kron(G02Int,E)+Mom*kron(G01*EC,E);
+
+b_ksi_0 = -kappa_B*kron(G10*EC,S);
+b_theta_0 = kron(I,(E+2*zeta_V*N*S))-Mom*(h^-1)*kron(G10*EC,S)+Mom*kron(G12Int,S)-Mom*kron(G11*EC,S);
+
+
+A0 = [a_ksi_0, a_theta_0;
+      b_ksi_0, b_theta_0];
+
+a_ksi_1 = 2*zeta_V*kron(I,E)+2*zeta_e*kron(G00Int,E)+2*eta_B*kron(G00*EC,E);
+a_theta_1 = -2*beta*N*kron(G01Int,E)+2*beta*N*kron(G00*EC,E);
+
+b_ksi_1 = -2*zeta_e*kron(G10Int,S)-2*eta_B*kron(G10*EC,S);
+b_theta_1 = 2*zeta_V*kron(I,E)+2*beta*N*kron(G11Int,S)-2*beta*N*kron(G10*EC,S);
+
+
+A1 = [a_ksi_1, a_theta_1;
+      b_ksi_1, b_theta_1];
+
+  
+a_ksi_2 = kron(G00Int,E)+mu_B*kron(G00*EC,E);
+a_theta_2 = beta*kron(G01Int,S)-beta*kron(G00*EC,S);
+
+b_ksi_2 = -kron(G10Int,S)-mu_B*kron(G10*EC,S);
+b_theta_2 = beta*kron(G11Int,E)-beta*kron(G10*EC,E);
+
+
+A2 = [a_ksi_2, a_theta_2;
+      b_ksi_2, b_theta_2];
+
+
+
+
+g = [kron(G00Int,E), zeros(length(kron(G00Int,E)));zeros(length(kron(G00Int,E))) ,-kron(G10Int,S)];
+
+g_m = [kron(G00*EC,E),zeros(length(kron(G00*EC,E)));zeros(length(kron(G10*EC,S))),-kron(G10*EC,S)];
+
+
+%% Поиск собственных значений
+EigVal = polyeig(A0,A1,A2);
+
+figure;
+hold on; grid on; box on;
+ff = gca;
+ff.FontSize = 20;
+ff.FontName = 'Times New Roman';
+
+flagNonStab = 0;
+for i=1:length(EigVal)
+    markerColor = '.k';
+    markerSize = 16;
+    if real(EigVal(i))>0
+        markerColor = '.r';
+        markerSize = 25;
+        flagNonStab = flagNonStab+1;
+    end
+    plot(real(EigVal(i)),imag(EigVal(i)),markerColor,'MarkerSize',markerSize)
+end
+xlabel('Re(\lambda)')
+ylabel('Im(\lambda)')
+
+if flagNonStab>0
+    title(['Система НЕустойчива ','(max(Re \lambda) = ',num2str(max(real(EigVal))),')'])
+else
+    title(['Система усточива ','(max(Re \lambda) = ',num2str(max(real(EigVal))),')'])
+end
+
+%% Поиск критической скорости
+N_start = 0;
+step_N = 0.5;
+
+Argan_diagram (N_start,step_N);
+
+
+%% Решение ДУ
+
+opt=odeset('AbsTol',1e-6,'RelTol',1e-6); % настройки точности
+
+TN=2*pi/N;    % время одного оборота
+nT = 500;    % количество оборотов ротора
+tlim=TN*nT;   % полное время исследования
+T=[0,tlim];   % интервал полного исследования
+
+x0 = zeros(2*length(A0),1); % Вектор начальных условий
+% amplitude = 1e-3/l;
+amplitude = 0;
+period = 1;
+phase = 0;
+tic;
+[t,Z0] = ode23t(@(t,Z0) solver(t,Z0,A0,A1,A2,g,g_m,h,N,kappa_B, eta_B,amplitude,phase,period),T,x0,opt);
+toc;
+
+
+%% Запись векторов
+KSI_X = [zeros(length(Z0(:,1)),1),Z0(:,1:2:length(A2)/2)];
+KSI_Y = [zeros(length(Z0(:,1)),1),Z0(:,2:2:length(A2)/2)];
+Z_coord = 0:h:1;
+Z_coord = kron(Z_coord,ones(length(Z0(:,1)),1));
+
+
+%% 3-D Трактория
+Number_of_rev = 100;
+index = find(t/TN>=nT-Number_of_rev);
+
+figure;
+box on; grid on; hold on;
+plot3(Z_coord(index,:),KSI_Y(index,:),KSI_X(index,:),'.r','MarkerSize',5)
+
+ff = gca;
+ff.FontSize = 35;
+ff.FontName = 'Times New Roman';
+xlabel('\zeta')
+ylabel('\it y','Rotation', 0)
+zlabel('\it x')
+
+%% 3-D Линия
+figure;
+box on; grid on; hold on;
+plot3(Z_coord(10000,:),KSI_Y(10000,:),KSI_X(10000,:),'-r','MarkerSize',5)
+
+
+
+%% Графики перемещений
+Number_of_rev = 100;
+index = find(t/TN>=nT-Number_of_rev);
+
+figure;
+box on; grid on; hold on;
+
+plot(t(index)/TN,KSI_X(index,m+1),t(index)/TN,KSI_Y(index,m+1))
+ff = gca;
+yline(1e-3,'--','LineWidth',3)
+yline(-1e-3,'--','LineWidth',3)
+ff.FontSize = 35;
+ff.FontName = 'Times New Roman';
+legend('\xi_{\it x}','\xi_{\it y}')
+xlabel('Количество оборотов ротора')
+
+%% Фазовые траектории
+Number_of_rev = 400;
+index = find(t/TN>=nT-Number_of_rev);
+
+x = linspace(0,100,10000);
+ksi_0_x = amplitude*sin((2*pi/period)*x+phase);
+ksi_0_y = amplitude*cos((2*pi/period)*x+phase);
+
+figure;
+box on; grid on; hold on;
+plot(-KSI_Y(index,m),KSI_X(index,m))
+plot(-ksi_0_y,ksi_0_x,'--r','LineWidth',2)
+ff = gca;
+ff.FontSize = 15;
+axis equal;
