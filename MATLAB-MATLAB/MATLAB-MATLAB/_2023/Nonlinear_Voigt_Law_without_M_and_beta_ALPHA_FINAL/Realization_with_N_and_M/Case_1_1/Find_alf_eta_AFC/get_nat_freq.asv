@@ -17,15 +17,10 @@ function [natural_freq] = get_nat_freq(d,Number_freq)
 
     natural_freq_all = sort(imag(Eig_values(find(imag(Eig_values)>=0))));
     
-    natural_freq_all_unique = natural_freq_all(1);
-    for i=2:length(natural_freq_all)
-       if abs(natural_freq_all(i)-natural_freq_all(i-1))>10e-5
-           natural_freq_all_unique = [natural_freq_all_unique,natural_freq_all(i)];
-       end
-    end
+    for i=
     
     
-%     natural_freq_all_unique = unique(natural_freq_all);
+    natural_freq_all_unique = unique(natural_freq_all);
 
     for i=1:Number_freq
         natural_freq(i) = natural_freq_all_unique(i);
