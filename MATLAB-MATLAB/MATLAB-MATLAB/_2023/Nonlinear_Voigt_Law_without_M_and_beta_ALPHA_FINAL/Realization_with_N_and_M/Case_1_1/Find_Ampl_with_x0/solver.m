@@ -1,4 +1,4 @@
-function Right_part = solver(t,X,A0,A1,A2,G02Int,G00,E,zeta_VV,alpha,M,N,R,m,Gamma_0,nat_freq)
+function Right_part = solver(t,X,A0,A1,A2,G02Int,G00,E,zeta_VV,alpha,M,N,R,m,Gamma_0,nat_freq,F_coeff)
 
 %% Filling in vectors
 ksi = M*X(1:1:2*(m-1));
@@ -24,13 +24,11 @@ EC = zeros(m-1);
 node_N = round((m-1)/2);
 EC(node_N,node_N) = 1;
 
-F_gamma = -Gamma_0 * cos(0.95*nat_freq(1)*t) * [1;0];
+F_gamma = -Gamma_0 * cos(F_coeff*nat_freq(1)*t) * [1;0];
 Gamma = kron(G00*EC,E) * kron(ones(m-1,1),F_gamma);
 
 
-
 MatrKoeff = [zeros(length(A0)) , eye(length(A0)); -A2\A0, -A2\A1]; % matrix of coefficients
-% SvobVector = [zeros((length(A0)),1);A2\(G_f_NL*F_f_NL+G_g_NL*F_g_NL)];                     % free vector
 SvobVector = [zeros((length(A0)),1);A2\(G_f_NL*F_f_NL+G_g_NL*F_g_NL+Gamma)];                 % free vector
 
 Right_part = MatrKoeff*X+SvobVector;

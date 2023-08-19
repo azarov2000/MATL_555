@@ -7,7 +7,7 @@ clear
 warning('on')
 m = 6;
 h = 1/m;
-N = 0;
+N = 33;
 
 % Rod Parameters
 d = 20*10^-3;           %[m]
@@ -16,18 +16,16 @@ ro = 7800;              %[kg/m^3]
 Elastic = 2e11;         %[Pa]
 mu_R = 1;
 
-zeta_e = 0.025;         %[-] Не менять!
-zeta_V = 0.05;         %[-]  Не менять!
-% zeta_VV = 0.005;
-% alpha = 0.1;
-zeta_VV = 0.05;
-% alpha = 0.035;
-alpha = 0;
+zeta_e = 0.02;         %[-] Не менять!
+zeta_V = 0.0001;       %[-]  Не менять!
+
+alpha = 0.03;
+zeta_VV = 0.0001;
 
 N_z = 0;           % Осевая сила
 M_z = 0;           % Крутящий момент
 
-Gamma_0 = 7.9;      % Амплитуда силы
+Gamma_0 = 0;      % Амплитуда силы
 
 %% Get_matrix
 [G00Int,G01Int,G02Int,G00,G01,G02]=get_matrix(m);
@@ -73,15 +71,15 @@ Ncritical = get_N_crit (N_start,step_N,data);
 %% Solution of the differential equation
 T=[0,50];                   % the interval of the full study
 % opt=odeset('AbsTol',1e-6,'RelTol',1e-6);
-opt = odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
+opt = odeset('AbsTol', 1e-10, 'RelTol', 1e-10, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
 
 
 x0 = zeros(2*length(A0),1);  % vector of initial conditions
 % Node number from 1 to (m-1)
 number_node = round((m-1)/2);
 
-% x0(number_node+2) = 0.00005;
-% x0(number_node+3) = 0.00005;
+x0(number_node+2) = 0.00005;
+x0(number_node+3) = 0.00005;
 
 
 tic;
