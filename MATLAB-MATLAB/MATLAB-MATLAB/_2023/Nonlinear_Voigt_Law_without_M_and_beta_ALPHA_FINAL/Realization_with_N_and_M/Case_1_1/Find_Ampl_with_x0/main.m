@@ -10,12 +10,12 @@ in_vector = zeros(20,1);  % vector of initial conditions
 in_vector(number_node+2)   = 0.00005;
 in_vector(number_node+3) = 0.00005;
 
-N_vector_direct = 30:0.5:46;
+N_vector_direct = 30:0.05:35;
 for i=1:length(N_vector_direct)
     i
     [Ampl_N_direct(i),Vect_0] = VAR(0,0.03,0.0001,0,N_vector_direct(i),in_vector);
 end
-
+%%
 % Обратный ход
 in_vector_reverce = Vect_0;
 N_vector_reverce = 45.5:-0.5:30;
@@ -29,8 +29,8 @@ end
 %% Plot
 figure;
 box on; grid on; hold on;
-plot(N_vector_direct,Ampl_N_direct,'.k','MarkerSize',14);
-plot(N_vector_reverce,Ampl_N_reverce,'or','LineWidth',2);
+plot(N_vector_direct(1:15),Ampl_N_direct(1:15),'.k','MarkerSize',14);
+% plot(N_vector_reverce,Ampl_N_reverce,'or','LineWidth',2);
 legend('Прямой ход','Обратный ход')
 xlim('padded')
 ylim('padded')
@@ -132,17 +132,17 @@ function [MAX_AMPL,Vect_0] = VAR(Gamma_0,alpha,zeta_VV,F_coeff,N,x0)
         Z_coord{i} = ones(length(ksi_X{1}),1) * z_vect(i);
     end
 %%
-    % Spectral analysis
-    % dat.tNS = 5;
-    % dat.number_node = round((m-1)/2);
-    % dat.Power = 1;
-    % 
-    % dat.ksi_x = ksi_X{dat.number_node+1};
-    % dat.ksi_y = ksi_Y{dat.number_node+1};
-    % dat.t = t;
-    % dat.N = N;
-    % 
-    % Spectral_analysis(dat)
+%     Spectral analysis
+    dat.tNS = 5;
+    dat.number_node = round((m-1)/2);
+    dat.Power = 1;
+    
+    dat.ksi_x = ksi_X{dat.number_node+1};
+    dat.ksi_y = ksi_Y{dat.number_node+1};
+    dat.t = t;
+    dat.N = N;
+    
+    Spectral_analysis(dat)
 
     %% Nodes in 3D
     Number_end = 5;

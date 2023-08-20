@@ -1,0 +1,72 @@
+function [t,ksi_X,ksi_Y,MAX_AMPL] = SOLVE(d,T,opt)
+
+[A0,A1,A2] = Filling_matrix_A(d);
+
+x0 = zeros(2*length(A0),1);
+number_node = round((d.m-1)/2);
+
+Initial_value = 0;
+x0(2*number_node-1) = Initial_value;
+x0(2*number_node) = Initial_value;
+
+
+tic;
+[t,X] = ode23t(@(t,X) solver_(t,X,A0,A1,A2,d.G02Int,d.G00,d.E,d.zeta_VV,d.alpha,d.M,d.N,d.R,d.m,d.Gamma_0,d.natural_freq,d.F_coeff),T,x0,opt);
+toc;
+
+for k=1:2:length(A0)
+    ksi_X{k} = X(:,k);
+end
+for k=2:2:length(A0)
+    ksi_Y{k} = X(:,k);
+end
+ksi_X(:,2:2:end) = [];
+ksi_Y(:,1:2:end) = [];
+ksi_X = [zeros(length(ksi_X{1}),1),ksi_X,zeros(length(ksi_X{1}),1)];
+ksi_Y = [zeros(length(ksi_Y{1}),1),ksi_Y,zeros(length(ksi_Y{1}),1)];
+z_vect = 0:(1/d.m):1;
+
+for k=1:length(z_vect)
+    Z_coord{k} = ones(length(ksi_X{1}),1) * z_vect(k);
+end
+
+ind = find(t>T(end)-d.Number_end);
+MAX_AMPL = max(ksi_X{number_node+1}(ind));
+
+function Right_part = solver_(t,X,A0,A1,A2,G02Int,G00,E,zeta_VV,alpha,M,N,R,m,Gamma_0,nat_freq,F_coeff)
+
+    %% Filling in vectors
+    ksi = M*X(1:1:2*(m-1));
+    ksi_dot = M*X(2*(m-1)+1:1:4*(m-1));
+    for i=1:m-1
+        ksi_local = ksi((2*i-1):2*i);
+        ksi_dot_local = ksi_dot((2*i-1):2*i);
+        f_NL(i) = (ksi_dot_local)' * ksi_dot_local - 2*N*(ksi_dot_local)' * R * ksi_local + N^2 * (ksi_local)' * ksi_local;
+        g_NL(i) = (ksi_local)' * ksi_local;
+
+        G02Int_f_NL(:,i) = G02Int(:,i) * f_NL(i);
+        G02Int_g_NL(:,i) = G02Int(:,i) * g_NL(i);
+    end
+    G_f_NL = 2*zeta_VV*kron(G02Int_f_NL,E);
+    F_f_NL = (-ksi_dot + kron(eye(m-1),R) * N * ksi);
+
+    G_g_NL = - alpha*kron(G02Int_g_NL,E);
+    F_g_NL = ksi;
+
+    % Force
+    EC = zeros(m-1);
+    node_N = round((m-1)/2);
+    EC(node_N,node_N) = 1;
+
+    F_gamma = -Gamma_0 * cos(F_coeff*nat_freq(1)*t) * [1;0];
+    Gamma = kron(G00*EC,E) * kron(ones(m-1,1),F_gamma);
+
+
+    MatrKoeff = [zeros(length(A0)) , eye(length(A0)); -A2\A0, -A2\A1];
+    SvobVector = [zeros((length(A0)),1);A2\(G_f_NL*F_f_NL+G_g_NL*F_g_NL+Gamma)]; 
+
+    Right_part = MatrKoeff*X+SvobVector;
+end
+
+end
+

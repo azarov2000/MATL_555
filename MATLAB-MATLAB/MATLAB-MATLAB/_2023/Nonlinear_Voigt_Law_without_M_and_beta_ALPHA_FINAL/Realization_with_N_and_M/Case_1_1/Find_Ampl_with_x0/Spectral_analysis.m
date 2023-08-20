@@ -14,7 +14,7 @@ figure('WindowState','maximized');
      plot(t_Int,ksi_x_Int)
      xlabel('\tau')
      ylabel('\xi_{\it x}')
-     title(['Рассматривается ',num2str(d.tNS),' последних секунд'])
+     title(['Рассматривается ',num2str(d.tNS),' последних секунд',', N = ',num2str(d.N)])
      ff = gca;
      ff.FontName = 'Times New Roman';
      ff.FontSize = 18;
@@ -46,7 +46,7 @@ figure('WindowState','maximized');
      plot(t_Int,ksi_y_Int)
      xlabel('\tau')
      ylabel('\xi_{\it y}')
-     title(['Рассматривается ',num2str(d.tNS),' последних секунд'])
+     title(['Рассматривается ',num2str(d.tNS),' последних секунд',', N = ',num2str(d.N)])
      ff = gca;
      ff.FontName = 'Times New Roman';
      ff.FontSize = 18;

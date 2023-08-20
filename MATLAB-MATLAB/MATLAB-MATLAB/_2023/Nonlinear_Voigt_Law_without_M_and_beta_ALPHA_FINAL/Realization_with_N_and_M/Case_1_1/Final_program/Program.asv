@@ -66,7 +66,7 @@ ylabel('\xi_{x}');
 %% Поиск значения alpha (приложение силы к срединному узлу)
 tmp_mc = mc;
 
-alpha_vector = 0:0.005:0.1;
+alpha_vector = linspace(0,0.1,20);
 T=[0,100];
 opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
 tmp_mc.N = 0;
@@ -85,7 +85,7 @@ figure;
 box on; grid on; hold on;
 plot(alpha_vector,MAX_AMPL_alpha,'.r','MarkerSize',20)
 plot(alpha_RES,0.095,'*k','MarkerSize',20)
-yline(0.095+0.095*0.01,'--r','В пределах 1%','FontSize',14,'LineWidth',2)
+yline(0.095+0.095*0.01,'--r','LineWidth',2)
 yline(0.095-0.095*0.01,'--r','LineWidth',2)
 
 ff = gca;
@@ -96,37 +96,10 @@ title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
 xlabel('\alpha');
 ylabel('Amplitude');
 
-%% Реализации
-alpha_number = 4;
-figure;
-box on; grid on; hold on;
-plot(t{alpha_number},ksi_X{alpha_number}{7})
-ff = gca;
-ff.FontSize = 20;
-title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
-       '; \eta_{V} = ',num2str(zeta_V),'; \alpha = ',num2str(alpha_vector(alpha_number)),...
-       '; \eta_{VV} = ',num2str(tmp_mc.zeta_VV),'; \Omega = ',num2str(tmp_mc.N)])
-xlabel('t');
-ylabel('\xi_{x}');
 
 
-%% Поиск значения ета_VV (приложение силы к срединному узлу)
-tmp_mc = mc;
 
-zeta_VV_vector = 0:0.005:0.1;
-T=[0,100];
-opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
-tmp_mc.N = 0;
-tmp_mc.F_coeff = 0.8;
-tmp_mc.Number_end = 5;
-tmp_mc.Gamma_0 = Gamma_0_RES;
-tmp_mc.alpha = 0.015;
 
-for i=1:length(zeta_VV_vector)
-    tmp_mc.zeta_VV = zeta_VV_vector(i);
-    [t{i},ksi_X{i},ksi_Y{i},MAX_AMPL_zeta_VV(i)] = SOLVE(tmp_mc,T,opt);
-end
-zeta_VV_RES = interp1(MAX_AMPL_zeta_VV,zeta_VV_vector,0.095);
 
 
 

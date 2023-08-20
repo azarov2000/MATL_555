@@ -3,23 +3,21 @@ clc
 clear
 
 %%
-m = 6;
-zeta_e = 0.001;
-zeta_V = 0.01;
+m = 12;
+zeta_e = 0.02;
+zeta_V = 0.0001;
 
-alpha = 0.1;
-zeta_VV = 0.0001;
+alpha = 0;
+zeta_VV = 0;
 
 figure;
 grid off; box on
 text(0.1,0.5,['\eta_{e} = ', num2str(zeta_e) ])
 set(gca,'XColor','w','YColor','w','XTick',[],'YTick',[])
 
-
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% %%%% Find Gamma_0  %%%%
-Gamma_0_vector = linspace(0,50,20);
+Gamma_0_vector = linspace(0,10,2);
 N = 0;
 for i=1:length(Gamma_0_vector)
     i
@@ -129,7 +127,7 @@ function [MAX_AMPL] = VAR(Gamma_0,alpha,zeta_VV,F_coeff,N)
     
 
 
-    m = 6;
+    m = 12;
     h = 1/m;
 
     mu_R = 1;
@@ -194,8 +192,8 @@ function [MAX_AMPL] = VAR(Gamma_0,alpha,zeta_VV,F_coeff,N)
     number_node = round((m-1)/2);
 
 
-    x0(number_node+2) = 0.00005;
-    x0(number_node+3) = 0.00005;
+%     x0(number_node+2) = 0.00005;
+%     x0(number_node+3) = 0.00005;
 
     tic;
     [t,X] = ode23t(@(t,X) solver(t,X,A0,A1,A2,G02Int,G00,E,zeta_VV,alpha,M,N,R,m,Gamma_0,dat.nat_freq,F_coeff),T,x0,opt);

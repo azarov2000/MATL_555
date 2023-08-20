@@ -32,17 +32,7 @@ mc.N_z = N_z;
 mc.M_z = M_z;
 mc.M = get_matr_coeff_M(m);
 
-
-[mc.A0,mc.A1,mc.A2] = Filling_matrix_A(mc);
-
-% mc.A0 = kron(mc.I,(mc.E-2*mc.zeta_V*mc.N*mc.R)) - ...
-%     mc.N_z*kron(mc.G02Int,mc.E) + mc.M_z*kron(mc.G01Int,mc.R)*mc.M;
-% 
-% mc.A1 = 2*mc.zeta_V*kron(mc.I,mc.E)+2*mc.zeta_e*kron(mc.G00Int,mc.E);
-% 
-% mc.A2 = kron(mc.G00Int,mc.E);
-
-
+% [mc.A0,mc.A1,mc.A2] = Filling_matrix_A(mc);
 
 function [G00,G01,G02]=MatrixOfGreenIntegrate(j,k,h)
 
