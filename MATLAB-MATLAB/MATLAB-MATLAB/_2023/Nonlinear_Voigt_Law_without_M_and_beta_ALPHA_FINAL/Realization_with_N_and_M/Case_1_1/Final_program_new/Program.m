@@ -6,20 +6,19 @@ clear
 
 %% Входные параметры (для СЧ)
 m = 12;
-N = 35;
 zeta_e = 0.02;
 zeta_V = 0.0001;
 N_z = 0;
 M_z = 0;
 
-%% Matrix and data creator
-mc = matrix_creator(m,N,zeta_e,zeta_V,N_z,M_z);
+% Matrix and data creator
+mc = matrix_creator(m,zeta_e,zeta_V,N_z,M_z);
 
-%% Find Natural Frequency
+% Find Natural Frequency
 Number_freq = 4;
 mc.natural_freq = get_nat_freq(mc,Number_freq);
 
-%% Find N_critical
+% Find N_critical
 Ncritical = get_N_crit (0,0.1,mc);
 
 %% Поиск значения Г_0 (приложение силы к срединному узлу)
@@ -28,6 +27,7 @@ tmp_mc = mc;
 Gamma_0_vector = linspace(0,10,2);
 T=[0,200];
 opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
+tmp_mc.x0 = Initial_condition(tmp_mc,0);
 tmp_mc.N = 0;
 tmp_mc.zeta_VV = 0;
 tmp_mc.alpha = 0;
@@ -69,6 +69,7 @@ tmp_mc = mc;
 alpha_vector = 0:0.005:0.1;
 T=[0,100];
 opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
+tmp_mc.x0 = Initial_condition(tmp_mc,0);
 tmp_mc.N = 0;
 tmp_mc.zeta_VV = 0;
 tmp_mc.F_coeff = 0.8;
@@ -116,6 +117,7 @@ tmp_mc = mc;
 zeta_VV_vector = [0:0.00005:0.005,0.01:0.005:0.1];
 T=[0,100];
 opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
+tmp_mc.x0 = Initial_condition(tmp_mc,0);
 tmp_mc.N = 0;
 tmp_mc.F_coeff = 0.8;
 tmp_mc.Number_end = 5;
@@ -149,7 +151,7 @@ ylabel('Amplitude');
 % legend("AutoUpdate","on")
 
 %% Реализации
-zeta_VV_number = 12;
+zeta_VV_number = 20;
 figure;
 box on; grid on; hold on;
 plot(t{zeta_VV_number},ksi_X{zeta_VV_number}{7})
@@ -168,6 +170,7 @@ tmp_mc = mc;
 F_coeff_vector = 0.5:0.02:1.5;
 T=[0,100];
 opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
+tmp_mc.x0 = Initial_condition(tmp_mc,0);
 tmp_mc.N = 0;
 tmp_mc.Number_end = 5;
 tmp_mc.Gamma_0 = Gamma_0_RES;
@@ -197,31 +200,51 @@ title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
 %% Пямой ход и обратный
 tmp_mc = mc;
 
-N_vector = 0.5:0.02:1.5;
-T=[0,100];
+N_vector_direct = 33:1:50;
+T=[0,2000];
 opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
+tmp_mc.x0 = Initial_condition(tmp_mc,5e-3);
 tmp_mc.F_coeff = 0;
 tmp_mc.Number_end = 5;
 tmp_mc.Gamma_0 = 0;
 tmp_mc.alpha = 0.015;
 tmp_mc.zeta_VV = 10^-5;
-
-for i=1:length(N_vector)
-    tmp_mc.N = N_vector(i);
-    [t{i},ksi_X{i},ksi_Y{i},MAX_AMPL_direct_N(i)] = SOLVE(tmp_mc,T,opt);
+i = 1;
+while i <= length(N_vector_direct)
+    tmp_mc.N = N_vector_direct(i);
+    [RES_N_dir{i}] = SOLVE(tmp_mc,T,opt);
+    disp(RES_N_dir{i}.Rel_tol_extr)
+    if RES_N_dir{i}.Rel_tol_extr <= 1e-8
+        tmp_mc.x0 = RES_N_dir{i}.End_cond;
+        T = [0, 200];
+        i
+        T_res(i) = T(end);
+        i = i+1;
+    else 
+        T(end) = T(end) + 200;
+    end 
 end
+
+
+% for i=1:length(N_vector_direct)
+%     tmp_mc.N = N_vector_direct(i);
+%     [RES_N_dir{i}] = SOLVE(tmp_mc,T,opt);
+%     if i==1
+%         T(end) = T(end);
+%     end
+% end
+
 %%
 figure;
 box on; grid on; hold on;
-h1=stem(N_vector,MAX_AMPL);
+h1=stem(N_vector_direct,MAX_AMPL_direct_N);
 set(get(h1,'BaseLine'),'LineStyle','-');
 set(h1,'MarkerFaceColor','red');
 ff = gca;
 ff.FontSize = 16;
-xlabel('\nu_{\Gamma} / \nu_{1}')
+xlabel('\Omega')
 ylabel('Amplitude')
 title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
        '; \eta_{V} = ',num2str(zeta_V),'; \Gamma_{0} = ',num2str(tmp_mc.Gamma_0),...
-       '; \alpha = ',num2str(tmp_mc.alpha),'; \eta_{VV} = ',num2str(tmp_mc.zeta_VV),...
-       '; \Omega = ',num2str(tmp_mc.N)])
+       '; \alpha = ',num2str(tmp_mc.alpha),'; \eta_{VV} = ',num2str(tmp_mc.zeta_VV)])
 

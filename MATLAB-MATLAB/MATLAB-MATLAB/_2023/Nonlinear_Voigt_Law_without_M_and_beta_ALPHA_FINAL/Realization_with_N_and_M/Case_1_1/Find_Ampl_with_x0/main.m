@@ -7,9 +7,9 @@ m = 6;
 % Прямой ход
 number_node = round((m-1)/2);
 in_vector = zeros(20,1);  % vector of initial conditions
-in_vector(number_node+2)   = 0.00005;
-in_vector(number_node+3) = 0.00005;
-
+in_vector(number_node+2)   = 10^-5;
+in_vector(number_node+3) = 10^-5;
+%%
 N_vector_direct = 30:0.05:35;
 for i=1:length(N_vector_direct)
     i

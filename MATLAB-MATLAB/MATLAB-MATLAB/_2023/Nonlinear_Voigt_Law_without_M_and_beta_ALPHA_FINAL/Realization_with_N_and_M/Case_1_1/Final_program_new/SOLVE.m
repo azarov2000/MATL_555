@@ -1,18 +1,11 @@
-function [t,ksi_X,ksi_Y,MAX_AMPL] = SOLVE(d,T,opt)
+function [RES] = SOLVE(d,T,opt)
 
-[A0,A1,A2] = Filling_matrix_A(d);
-
-x0 = zeros(2*length(A0),1);
 number_node = round((d.m-1)/2);
-
-% Initial_value = 0;
-Initial_value = 5e-3;
-x0(2*number_node-1) = Initial_value;
-x0(2*number_node) = Initial_value;
+[A0,A1,A2] = Filling_matrix_A(d);
 
 
 tic;
-[t,X] = ode23t(@(t,X) solver_(t,X,A0,A1,A2,d.G02Int,d.G00,d.E,d.zeta_VV,d.alpha,d.M,d.N,d.R,d.m,d.Gamma_0,d.natural_freq,d.F_coeff),T,x0,opt);
+[t,X] = ode23t(@(t,X) solver_(t,X,A0,A1,A2,d.G02Int,d.G00,d.E,d.zeta_VV,d.alpha,d.M,d.N,d.R,d.m,d.Gamma_0,d.natural_freq,d.F_coeff),T,d.x0,opt);
 toc;
 
 for k=1:2:length(A0)
@@ -33,6 +26,17 @@ end
 
 ind = find(t>T(end)-d.Number_end);
 MAX_AMPL = max(ksi_X{number_node+1}(ind));
+[~,Extr_X]=ext(t,ksi_X{number_node+1}(ind));
+Extr_X_plus_ind = find(Extr_X>=0);
+Extr_X_plus = Extr_X(Extr_X_plus_ind);
+End_cond = X(end,:);
+
+RES.Rel_tol_extr = (max(Extr_X_plus)-min(Extr_X_plus))/mean(Extr_X_plus);
+RES.Abs_tol_extr = (max(Extr_X_plus)-min(Extr_X_plus));
+RES.Extr_X_plus = Extr_X_plus;
+RES.t = t(ind);
+RES.ksi_X = ksi_X{7}(ind);
+RES.End_cond = End_cond;
 
 function Right_part = solver_(t,X,A0,A1,A2,G02Int,G00,E,zeta_VV,alpha,M,N,R,m,Gamma_0,nat_freq,F_coeff)
 

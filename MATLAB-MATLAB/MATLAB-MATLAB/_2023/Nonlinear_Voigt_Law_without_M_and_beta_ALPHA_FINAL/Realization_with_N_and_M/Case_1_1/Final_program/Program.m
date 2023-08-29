@@ -13,7 +13,7 @@ N_z = 0;
 M_z = 0;
 
 %% Matrix and data creator
-mc = matrix_creator(m,N,zeta_e,zeta_V,N_z,M_z);
+mc = matrix_creator(m,zeta_e,zeta_V,N_z,M_z);
 
 %% Find Natural Frequency
 Number_freq = 4;
@@ -113,25 +113,118 @@ ylabel('\xi_{x}');
 %% Поиск значения ета_VV (приложение силы к срединному узлу)
 tmp_mc = mc;
 
-zeta_VV_vector = 0:0.005:0.1;
+zeta_VV_vector = [0:0.00005:0.005,0.01:0.005:0.1];
 T=[0,100];
 opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
 tmp_mc.N = 0;
 tmp_mc.F_coeff = 0.8;
 tmp_mc.Number_end = 5;
 tmp_mc.Gamma_0 = Gamma_0_RES;
-tmp_mc.alpha = 0.015;
+% tmp_mc.alpha = 0.015;
+tmp_mc.alpha = 0;
 
 for i=1:length(zeta_VV_vector)
     tmp_mc.zeta_VV = zeta_VV_vector(i);
     [t{i},ksi_X{i},ksi_Y{i},MAX_AMPL_zeta_VV(i)] = SOLVE(tmp_mc,T,opt);
 end
+%%
 zeta_VV_RES = interp1(MAX_AMPL_zeta_VV,zeta_VV_vector,0.095);
+tmp_zeta_VV = interp1(zeta_VV_vector,MAX_AMPL_zeta_VV,1e-5);
+%%
+figure;
+box on; grid on; hold on;
+plot(zeta_VV_vector,MAX_AMPL_zeta_VV,'.r','MarkerSize',20)
+plot(zeta_VV_RES,0.095,'*k','MarkerSize',20)
+plot(1e-5,tmp_zeta_VV,'*b','MarkerSize',20)
+yline(0.095+0.095*0.10,'--r','В пределах 10%','FontSize',14,'LineWidth',2)
+yline(0.095-0.095*0.10,'--r','LineWidth',2)
+
+ff = gca;
+ff.FontSize = 20;
+title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
+       '; \eta_{V} = ',num2str(zeta_V),'; \Gamma_{0} = ',num2str(tmp_mc.Gamma_0),...
+       '; \alpha = ',num2str(tmp_mc.alpha),'; \Omega = ',num2str(tmp_mc.N)])
+xlabel('\eta_{VV}');
+ylabel('Amplitude');
+% legend("AutoUpdate","on")
+
+%% Реализации
+zeta_VV_number = 20;
+figure;
+box on; grid on; hold on;
+plot(t{zeta_VV_number},ksi_X{zeta_VV_number}{7})
+ff = gca;
+ff.FontSize = 20;
+title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
+       '; \eta_{V} = ',num2str(zeta_V),'; \alpha = ',num2str(tmp_mc.alpha),...
+       '; \eta_{VV} = ',num2str(zeta_VV_vector(zeta_VV_number)),'; \Omega = ',num2str(tmp_mc.N)])
+xlabel('t');
+ylabel('\xi_{x}');
 
 
+%% Построрение АЧХ (приложение силы к срединному узлу)
+tmp_mc = mc;
+
+F_coeff_vector = 0.5:0.02:1.5;
+T=[0,100];
+opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
+tmp_mc.N = 0;
+tmp_mc.Number_end = 5;
+tmp_mc.Gamma_0 = Gamma_0_RES;
+tmp_mc.alpha = 0.015;
+tmp_mc.zeta_VV = 10^-5;
+
+for i=1:length(F_coeff_vector)
+    tmp_mc.F_coeff = F_coeff_vector(i);
+    [t{i},ksi_X{i},ksi_Y{i},MAX_AMPL(i)] = SOLVE(tmp_mc,T,opt);
+end
+%%
+figure;
+box on; grid on; hold on;
+h1=stem(F_coeff_vector,MAX_AMPL);
+set(get(h1,'BaseLine'),'LineStyle','-');
+set(h1,'MarkerFaceColor','red');
+ff = gca;
+ff.FontSize = 16;
+xlabel('\nu_{\Gamma} / \nu_{1}')
+ylabel('Amplitude')
+title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
+       '; \eta_{V} = ',num2str(zeta_V),'; \Gamma_{0} = ',num2str(tmp_mc.Gamma_0),...
+       '; \alpha = ',num2str(tmp_mc.alpha),'; \eta_{VV} = ',num2str(tmp_mc.zeta_VV),...
+       '; \Omega = ',num2str(tmp_mc.N)])
 
 
+%% Пямой ход и обратный
+tmp_mc = mc;
 
+N_vector_direct = 28:0.5:40;
+T=[0,5000];
+opt=odeset('AbsTol', 1e-6, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
+tmp_mc.F_coeff = 0;
+tmp_mc.Number_end = 5;
+tmp_mc.Gamma_0 = 0;
+tmp_mc.alpha = 0.015;
+tmp_mc.zeta_VV = 10^-5;
 
-
+for i=1:length(N_vector_direct)
+    tmp_mc.N = N_vector_direct(i);
+    [t,ksi_X,ksi_Y,MAX_AMPL_direct_N(i)] = SOLVE(tmp_mc,T,opt);
+    figure;
+    box on; grid on; hold on;
+    plot(t,ksi_X{7})
+    title(['\Omega = ', num2str(N_vector_direct(i))])
+end
+%%
+figure;
+box on; grid on; hold on;
+h1=stem(N_vector_direct,MAX_AMPL_direct_N);
+set(get(h1,'BaseLine'),'LineStyle','-');
+set(h1,'MarkerFaceColor','red');
+ff = gca;
+ff.FontSize = 16;
+xlabel('\Omega')
+ylabel('Amplitude')
+title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
+       '; \eta_{V} = ',num2str(zeta_V),'; \Gamma_{0} = ',num2str(tmp_mc.Gamma_0),...
+       '; \alpha = ',num2str(tmp_mc.alpha),'; \eta_{VV} = ',num2str(tmp_mc.zeta_VV)])
 

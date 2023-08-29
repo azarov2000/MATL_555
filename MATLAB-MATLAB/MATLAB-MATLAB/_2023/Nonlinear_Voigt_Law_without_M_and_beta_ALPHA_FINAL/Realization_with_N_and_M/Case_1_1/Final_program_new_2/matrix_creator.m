@@ -25,7 +25,6 @@ mc.E = eye(2);
 mc.R = [0 -1; 1 0];
 
 mc.m = m;
-% mc.N = N;
 mc.zeta_e = zeta_e;
 mc.zeta_V = zeta_V;
 mc.N_z = N_z;
@@ -91,6 +90,25 @@ function [mc] = edging(G00Int,G01Int,G02Int,G00,G01,G02,I,Z,m)
 
 end
 
+function M = get_matr_coeff_M(m)
+    h = 1/m;
+    M = zeros(m-1);
+    
+    for i=1:length(M)
+        for j=1:length(M)
+            
+            if i==j
+                M(i,j) = -2;
+            end
+            if i == j-1 || j == i-1 
+                M(i,j) = 1;
+            end 
+            
+        end 
+    end
+    M = (1/h)^2*M;
+    M = kron(M,eye(2));
+end
 
 
 end

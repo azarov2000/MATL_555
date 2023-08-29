@@ -1,18 +1,11 @@
-function [t,ksi_X,ksi_Y,MAX_AMPL] = SOLVE(d,T,opt)
+function [RES] = SOLVE(d,T,opt)
 
-[A0,A1,A2] = Filling_matrix_A(d);
-
-x0 = zeros(2*length(A0),1);
 number_node = round((d.m-1)/2);
-
-% Initial_value = 0;
-Initial_value = 5e-3;
-x0(2*number_node-1) = Initial_value;
-x0(2*number_node) = Initial_value;
+[A0,A1,A2] = Filling_matrix_A(d);
 
 
 tic;
-[t,X] = ode23t(@(t,X) solver_(t,X,A0,A1,A2,d.G02Int,d.G00,d.E,d.zeta_VV,d.alpha,d.M,d.N,d.R,d.m,d.Gamma_0,d.natural_freq,d.F_coeff),T,x0,opt);
+[t,X] = ode23t(@(t,X) solver_(t,X,A0,A1,A2,d.G02Int,d.G00,d.E,d.zeta_VV,d.alpha,d.M,d.N,d.R,d.m,d.Gamma_0,d.natural_freq,d.F_coeff),T,d.x0,opt);
 toc;
 
 for k=1:2:length(A0)
@@ -31,8 +24,34 @@ for k=1:length(z_vect)
     Z_coord{k} = ones(length(ksi_X{1}),1) * z_vect(k);
 end
 
-ind = find(t>T(end)-d.Number_end);
-MAX_AMPL = max(ksi_X{number_node+1}(ind));
+
+ind_1 = find(t>=T(end)-d.Number_end);
+ind_2 = find(t>=T(end)-(d.Base_number+2*d.Number_end) &...
+        t<=T(end)-(d.Base_number+d.Number_end));
+RES.MAX_AMPL_1 = max(ksi_X{number_node+1}(ind_1));
+RES.MAX_AMPL_2 = max(ksi_X{number_node+1}(ind_2));
+[RES.t_extr_All,RES.Extr_X_ALL]=ext(t,ksi_X{number_node+1});
+[~,Extr_X_1]=ext(t(ind_1),ksi_X{number_node+1}(ind_1));
+[~,Extr_X_2]=ext(t(ind_2),ksi_X{number_node+1}(ind_2));
+Extr_X_plus_ind_1 = find(Extr_X_1>=0);
+Extr_X_plus_ind_2 = find(Extr_X_2>=0);
+RES.EXTR_1 = Extr_X_1(Extr_X_plus_ind_1);
+RES.EXTR_2 = Extr_X_2(Extr_X_plus_ind_2);
+B = mean(RES.EXTR_1);
+A = mean(RES.EXTR_2);
+End_cond = X(end,:);
+
+RES.Rel_tol_extr = abs(B-A)/((A+B)/2);
+% RES.Extr_X_plus = Extr_X_plus;
+RES.End_cond = End_cond;
+
+
+figure;
+box on; grid on; hold on;
+plot(t,ksi_X{number_node+1})
+ff = gca;
+title(['\Omega = ',num2str(d.N),' RelTol = ', num2str(RES.Rel_tol_extr)])
+ff.FontSize = 14;
 
 function Right_part = solver_(t,X,A0,A1,A2,G02Int,G00,E,zeta_VV,alpha,M,N,R,m,Gamma_0,nat_freq,F_coeff)
 
