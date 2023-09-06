@@ -130,14 +130,14 @@ g = [gksi,ZeroMatr;ZeroMatr,gteta];
 
 index_disp = 1:(mnew+1)*2;
 
-disp = [index_disp(jC*2)-1;...  % ksi_x где расположен диск
-        index_disp(2*jC)]       % ksi_y где расположен диск 
+disp = [index_disp(jC*2)-1;...      % ksi_x где расположен диск
+        index_disp(2*jC)];          % ksi_y где расположен диск 
 
 index_angle = (mnew+1)*2+1:(mnew+1)*4;
 
 angle = [index_angle(jC*2)-1;...
-         index_angle(2*jC)] % указаны номера узлов 
-                                                % указаны номер 
+         index_angle(2*jC)];        % указаны номера узлов 
+                                    % указаны номер 
 index_disp_vel = (mnew+1)*4+1:(mnew+1)*6;
 
 disp_vel = [index_disp_vel(jC*2)-1;...  

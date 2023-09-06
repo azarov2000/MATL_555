@@ -44,6 +44,10 @@ End_cond = X(end,:);
 RES.Rel_tol_extr = abs(B-A)/((A+B)/2);
 RES.End_cond = End_cond;
 
+[~,CoeffPr] = PrecessionCoeff(t(ind_1), ksi_X{number_node+1}(ind_1),ksi_Y{number_node+1}(ind_1),d.N);
+
+RES.CoffPrecession = mean(CoeffPr);
+
 
 figure;
 box on; grid on; hold on;

@@ -61,21 +61,21 @@ Ncritical = get_N_crit (N_start,step_N,data);
 
 
 %% Influence tors_Moment on critical velocirty
-% M_z_vector = linspace(-10,10,10000);
-% for i=1:length(M_z_vector)
-%     i
-%     data_tmp_M = data;
-%     data_tmp_M.M_z = M_z_vector(i);
-%     N_crit_M(i) = get_N_crit(0.01,0.1,data_tmp_M);
-% end
-% %%
-% figure
-% box on; hold on; grid on;
-% plot(M_z_vector, N_crit_M,'.r','MarkerSize',15)
-% ff = gca;
-% ff.FontSize = 25;
-% xlabel("M_{ z}")
-% ylabel("N_{ crit}")
+M_z_vector = linspace(-10,10,10000);
+for i=1:length(M_z_vector)
+    i
+    data_tmp_M = data;
+    data_tmp_M.M_z = M_z_vector(i);
+    N_crit_M(i) = get_N_crit(0.01,0.1,data_tmp_M);
+end
+%%
+figure
+box on; hold on; grid on;
+plot(M_z_vector, N_crit_M,'.r','MarkerSize',15)
+ff = gca;
+ff.FontSize = 25;
+xlabel("M_{ z}")
+ylabel("N_{ crit}")
 %% Influence axis_Force on critical velocirty
 % N_z_vector = linspace(-10,10,1000);
 % for i=1:length(N_z_vector)
@@ -93,39 +93,39 @@ Ncritical = get_N_crit (N_start,step_N,data);
 
 
 %% max(Re(lyambda)) x M_z
-% M_z_vector = linspace(-10,10,10000);
-% dd = data;
-% dd.N_z = 0;
-% dd.N = 0;
-% for i=1:length(M_z_vector)
-%     dd.M_z = M_z_vector(i);
-%     
-%     dd.A0 = kron(I,(E-2*zeta_V*dd.N*R)) - dd.N_z*kron(G02Int,E) + dd.M_z*kron(G01Int,R)*M;
-%     dd.A1 = 2*zeta_V*kron(I,E)+2*zeta_e*kron(G00Int,E);
-%     dd.A2 = mu_R*kron(G00Int,E);
-%     
-%     eig_values = polyeig(dd.A0,dd.A1,dd.A2);
-%     index = find(real(eig_values) == max(real(eig_values)));
-%     Max_RE_with_M(i) = real(eig_values(index(1)));
-%     Max_IM_with_M(i) = imag(eig_values(index(1)));
-%     
-% end
-% 
-% figure
-% box on; grid on; hold on;
-% plot(Max_RE_with_M,M_z_vector)
-% ff = gca;
-% ff.FontSize = 25;
-% xlabel("Max(Re(\lambda))")
-% ylabel("M_{ z}")
-% 
-% figure
-% box on; grid on; hold on;
-% plot(Max_RE_with_M,Max_IM_with_M)
-% ff = gca;
-% ff.FontSize = 25;
-% xlabel("Max(Re(\lambda))")
-% ylabel("Max(Im(\lambda))")
+M_z_vector = linspace(-10,10,10000);
+dd = data;
+dd.N_z = 0;
+dd.N = 0;
+for i=1:length(M_z_vector)
+    dd.M_z = M_z_vector(i);
+    
+    dd.A0 = kron(I,(E-2*zeta_V*dd.N*R)) - dd.N_z*kron(G02Int,E) + dd.M_z*kron(G01Int,R)*M;
+    dd.A1 = 2*zeta_V*kron(I,E)+2*zeta_e*kron(G00Int,E);
+    dd.A2 = mu_R*kron(G00Int,E);
+    
+    eig_values = polyeig(dd.A0,dd.A1,dd.A2);
+    index = find(real(eig_values) == max(real(eig_values)));
+    Max_RE_with_M(i) = real(eig_values(index(1)));
+    Max_IM_with_M(i) = imag(eig_values(index(1)));
+    
+end
+
+figure
+box on; grid on; hold on;
+plot(Max_RE_with_M,M_z_vector)
+ff = gca;
+ff.FontSize = 25;
+xlabel("Max(Re(\lambda))")
+ylabel("M_{ z}")
+
+figure
+box on; grid on; hold on;
+plot(Max_RE_with_M,Max_IM_with_M)
+ff = gca;
+ff.FontSize = 25;
+xlabel("Max(Re(\lambda))")
+ylabel("Max(Im(\lambda))")
 
 %% max(Re(lyambda)) x N_z
 

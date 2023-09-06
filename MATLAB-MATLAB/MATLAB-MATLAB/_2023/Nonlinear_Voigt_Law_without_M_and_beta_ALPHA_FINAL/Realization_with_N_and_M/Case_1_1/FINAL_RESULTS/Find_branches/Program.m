@@ -19,9 +19,9 @@ Number_freq = 4;
 mc.natural_freq = get_nat_freq(mc,Number_freq);
 
 % Find N_critical
-Ncritical = get_N_crit (0,0.1,mc);
+[Ncritical,mc.complex_indicator] = get_N_crit (0,0.1,mc);
 
-
+disp_param(mc)
 %% Обратный ход (верхняя ветвь)
 tmp_mc = mc;
 
@@ -70,8 +70,8 @@ title(['m = ',num2str(m),'; \eta_{e} = ',num2str(zeta_e),...
 %% Прямой ход (нижняя точка)
 tmp_mc = mc;
 
-N_vector_direct = 31.65:0.1:50;
-T = [0,6000];
+N_vector_direct = 31.4:0.1:50;
+T = [0,8000];
 opt=odeset('AbsTol', 1e-8, 'RelTol', 1e-6, 'OutputFcn', @(t, y, flag) odeoutput(t, y, flag, T(1), T(end) - T(1)));
 tmp_mc.x0 = Initial_condition(tmp_mc,5e-5);
 tmp_mc.F_coeff = 0;
